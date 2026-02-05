@@ -9,14 +9,28 @@ npm install
 npm run dev
 ```
 
+## Deploy to Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
+
+1. Click the button above or push your repo to GitHub
+2. Connect your repository in Railway
+3. Set environment variables in Railway dashboard:
+   - `API_KEYS`: Comma-separated list of API keys (e.g., `key1,key2,key3`)
+   - `PORT` and `NODE_ENV` are auto-configured
+4. Railway will automatically detect the `Dockerfile` and deploy
+
+The service will be available at your Railway-provided URL.
+
 ## Configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
+| Variable   | Description                    | Default         |
+| ---------- | ------------------------------ | --------------- |
+| `PORT`     | Server port                    | `3000`          |
 | `API_KEYS` | Comma-separated valid API keys | (auth disabled) |
 
 Example:
+
 ```bash
 API_KEYS=key1,key2,key3 npm start
 ```
@@ -50,19 +64,32 @@ curl -X POST http://localhost:3000/v1/stamp \
 ## Payload Reference
 
 ### text (required)
+
 - `main` (string, required): Primary stamp text, max 1000 chars
 - `secondary` (string, optional): Secondary text with variables `{{page}}` and `{{total}}`
 
 ### pages
+
 - `"all"` (default) or array of page numbers `[1, 3, 5]`
 - 1-indexed, strict mode (invalid pages = error)
 
 ### position
+
 - `anchor`: `top-left`, `top-center`, `top-right`, `center-left`, `center` (default), `center-right`, `bottom-left`, `bottom-center`, `bottom-right`
-- `marginX`: Horizontal offset in PDF points (default: 0)
-- `marginY`: Vertical offset in PDF points (default: 0)
+- `marginX`: Horizontal offset in PDF points (default: 0, must be positive)
+- `marginY`: Vertical offset in PDF points (default: 0, must be positive)
+
+**Margin Behavior:**
+Margins are always positive and applied intuitively based on the anchor position:
+- **Top anchors** (`top-*`): positive `marginY` moves text DOWN into the page
+- **Bottom anchors** (`bottom-*`): positive `marginY` moves text UP into the page
+- **Left anchors** (`*-left`): positive `marginX` moves text RIGHT into the page
+- **Right anchors** (`*-right`): positive `marginX` moves text LEFT into the page
+
+Example: `"anchor": "top-center", "marginY": 30` places text 30 points below the top edge.
 
 ### style
+
 - `fontSize`: 6-200 (default: 48)
 - `opacity`: 0-100 (default: 30)
 - `rotation`: -360 to 360 degrees (default: 0)
@@ -70,15 +97,15 @@ curl -X POST http://localhost:3000/v1/stamp \
 
 ## Errors
 
-| Code | Status | Description |
-|------|--------|-------------|
-| `INVALID_INPUT` | 400 | Bad request data |
-| `UNAUTHORIZED` | 401 | Missing/invalid API key |
-| `FILE_TOO_LARGE` | 413 | Exceeds 200MB |
-| `UNSUPPORTED_MEDIA` | 415 | Not a PDF |
-| `INVALID_PDF` | 422 | Corrupted PDF |
-| `PROCESSING_FAILED` | 500 | Server error |
-| `TIMEOUT` | 504 | Exceeded 20s |
+| Code                | Status | Description             |
+| ------------------- | ------ | ----------------------- |
+| `INVALID_INPUT`     | 400    | Bad request data        |
+| `UNAUTHORIZED`      | 401    | Missing/invalid API key |
+| `FILE_TOO_LARGE`    | 413    | Exceeds 200MB           |
+| `UNSUPPORTED_MEDIA` | 415    | Not a PDF               |
+| `INVALID_PDF`       | 422    | Corrupted PDF           |
+| `PROCESSING_FAILED` | 500    | Server error            |
+| `TIMEOUT`           | 504    | Exceeded 20s            |
 
 ## Constraints
 

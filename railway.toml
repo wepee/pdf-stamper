@@ -1,0 +1,22 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "node src/server.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[[deploy.environmentVariables]]
+name = "PORT"
+default = "3000"
+
+[[deploy.environmentVariables]]
+name = "NODE_ENV"
+default = "production"
+
+# API_KEYS should be set in Railway dashboard for security
+# Format: comma-separated list of API keys
+# Example: API_KEYS=key1,key2,key3

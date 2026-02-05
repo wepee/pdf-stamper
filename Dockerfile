@@ -12,7 +12,8 @@ RUN npm ci --omit=dev
 COPY src ./src
 
 # Non-root user for security
-RUN addgroup --system app && adduser --system --ingroup app app
+RUN addgroup --system app && adduser --system --ingroup app app && \
+    chown -R app:app /app
 USER app
 
 # Expose port
