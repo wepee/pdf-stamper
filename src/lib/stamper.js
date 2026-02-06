@@ -39,7 +39,6 @@ export async function stampPdf(pdfBuffer, payload, requestId) {
   for (const pageIndex of targetPageIndices) {
     const page = pages[pageIndex];
     const { width, height } = page.getSize();
-    const pageRotation = page.getRotation().angle;
 
     // Build stamp text with variable substitution
     const stampText = buildStampText(payload.text, pageIndex + 1, totalPages);
@@ -47,26 +46,36 @@ export async function stampPdf(pdfBuffer, payload, requestId) {
 
     // Calculate text dimensions
     const lineHeight = style.fontSize * 1.2;
-    const textHeight = lines.length * lineHeight;
+    const textBlockHeight = lines.length * lineHeight;
     const textWidths = lines.map((line) => font.widthOfTextAtSize(line, style.fontSize));
     const maxTextWidth = Math.max(...textWidths);
 
-    // Calculate anchor position
-    const anchorPos = calculateAnchorPosition(
+    // Calculate text block position (top-left corner in PDF coordinates)
+    // Text dimensions are used to ensure the stamp never overflows the page
+    const blockPos = calculateBlockPosition(
       position.anchor,
       width,
       height,
       position.marginX,
-      position.marginY
+      position.marginY,
+      maxTextWidth,
+      textBlockHeight
     );
 
-    // Draw each line centered around anchor
+    // Rotation center is the center of the text block
+    const rotationCenter = {
+      x: blockPos.x + maxTextWidth / 2,
+      y: blockPos.y - textBlockHeight / 2,
+    };
+
+    // Draw each line
     lines.forEach((line, i) => {
       const lineWidth = textWidths[i];
-      
-      // Center text block around anchor point
-      const x = anchorPos.x - lineWidth / 2;
-      const y = anchorPos.y + textHeight / 2 - (i + 1) * lineHeight + lineHeight * 0.3;
+
+      // Center each line horizontally within the text block
+      const x = blockPos.x + (maxTextWidth - lineWidth) / 2;
+      // Baseline position: top of block, minus line offset, minus ascent (~70% of lineHeight)
+      const y = blockPos.y - (i + 0.7) * lineHeight;
 
       page.drawText(line, {
         x,
@@ -76,11 +85,7 @@ export async function stampPdf(pdfBuffer, payload, requestId) {
         color,
         opacity: style.opacity,
         rotate: degrees(style.rotation),
-        // Handle existing page rotation
-        rotateAboutPoint: {
-          x: anchorPos.x,
-          y: anchorPos.y,
-        },
+        rotateAboutPoint: rotationCenter,
       });
     });
   }
@@ -132,47 +137,38 @@ function buildStampText(textConfig, currentPage, totalPages) {
 }
 
 /**
- * Calculate position based on anchor and margins
- * Margins are always positive and applied intuitively:
- * - top anchors: marginY moves text down into the page
- * - bottom anchors: marginY moves text up into the page
- * - left anchors: marginX moves text right into the page
- * - right anchors: marginX moves text left into the page
+ * Calculate the text block position ensuring the stamp stays within page bounds.
+ * Returns the top-left corner of the text block in PDF coordinates (y-axis goes up).
+ *
+ * With margin 0, the text is flush against the edge but never outside the page.
+ * Margins always push the text further inward from the chosen anchor edge.
  */
-function calculateAnchorPosition(anchor, pageWidth, pageHeight, marginX, marginY) {
-  const positions = {
-    'top-left': { x: 0, y: pageHeight },
-    'top-center': { x: pageWidth / 2, y: pageHeight },
-    'top-right': { x: pageWidth, y: pageHeight },
-    'center-left': { x: 0, y: pageHeight / 2 },
-    'center': { x: pageWidth / 2, y: pageHeight / 2 },
-    'center-right': { x: pageWidth, y: pageHeight / 2 },
-    'bottom-left': { x: 0, y: 0 },
-    'bottom-center': { x: pageWidth / 2, y: 0 },
-    'bottom-right': { x: pageWidth, y: 0 },
-  };
+function calculateBlockPosition(anchor, pageWidth, pageHeight, marginX, marginY, blockWidth, blockHeight) {
+  let x, y;
 
-  const base = positions[anchor] || positions['center'];
-
-  // Apply margins intuitively based on anchor position
-  let adjustedMarginX = marginX;
-  let adjustedMarginY = marginY;
-
-  // For top anchors, positive marginY should move text DOWN (into the page)
-  if (anchor.startsWith('top-')) {
-    adjustedMarginY = -marginY;
+  // Horizontal positioning
+  if (anchor.includes('left')) {
+    // Left edge of text block is flush with left page edge + margin
+    x = marginX;
+  } else if (anchor.includes('right')) {
+    // Right edge of text block is flush with right page edge - margin
+    x = pageWidth - marginX - blockWidth;
+  } else {
+    // Center column (top-center, center, bottom-center)
+    x = (pageWidth - blockWidth) / 2 + marginX;
   }
 
-  // For left anchors, positive marginX should move text RIGHT (into the page)
-  // This is already correct (positive X)
-  
-  // For right anchors, positive marginX should move text LEFT (into the page)
-  if (anchor.endsWith('-right')) {
-    adjustedMarginX = -marginX;
+  // Vertical positioning (y = top edge of text block in PDF coords)
+  if (anchor.startsWith('top')) {
+    // Top of text block is flush with top page edge - margin
+    y = pageHeight - marginY;
+  } else if (anchor.startsWith('bottom')) {
+    // Bottom of text block is flush with bottom page edge + margin
+    y = marginY + blockHeight;
+  } else {
+    // Center row (center-left, center, center-right)
+    y = (pageHeight + blockHeight) / 2 + marginY;
   }
 
-  return {
-    x: base.x + adjustedMarginX,
-    y: base.y + adjustedMarginY,
-  };
+  return { x, y };
 }

@@ -82,13 +82,15 @@ curl -X POST http://localhost:3000/v1/stamp \
 - `marginY`: Vertical offset in PDF points (default: 0, must be positive)
 
 **Margin Behavior:**
-Margins are always positive and applied intuitively based on the anchor position:
+The stamp text block size is automatically accounted for: with margin 0, the text is flush against the edge but never overflows outside the page.
+
+Margins are always positive and push the text further inward from the chosen anchor edge:
 - **Top anchors** (`top-*`): positive `marginY` moves text DOWN into the page
 - **Bottom anchors** (`bottom-*`): positive `marginY` moves text UP into the page
 - **Left anchors** (`*-left`): positive `marginX` moves text RIGHT into the page
 - **Right anchors** (`*-right`): positive `marginX` moves text LEFT into the page
 
-Example: `"anchor": "top-center", "marginY": 30` places text 30 points below the top edge.
+Example: `"anchor": "top-right", "marginX": 0, "marginY": 0` places the stamp flush in the top-right corner, fully visible.
 
 ### style
 
