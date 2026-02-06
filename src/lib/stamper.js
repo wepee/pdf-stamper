@@ -121,10 +121,11 @@ function buildStampText(textConfig, currentPage, totalPages) {
   let result = textConfig.main;
 
   if (textConfig.secondary) {
-    const secondary = textConfig.secondary
-      .replace(/\{\{page\}\}/g, String(currentPage))
-      .replace(/\{\{total\}\}/g, String(totalPages));
-    result += '\n' + secondary;
+    result += '\n' + textConfig.secondary;
+  }
+
+  if (textConfig.showPageNumbers) {
+    result += '\n' + `Page ${currentPage} / ${totalPages}`;
   }
 
   return result;

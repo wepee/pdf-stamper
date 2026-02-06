@@ -44,7 +44,8 @@ curl -X POST http://localhost:3000/v1/stamp \
   -F 'payload={
     "text": {
       "main": "CONFIDENTIAL",
-      "secondary": "Page {{page}} / {{total}}"
+      "secondary": "Document N° 2024-001",
+      "showPageNumbers": true
     },
     "pages": "all",
     "position": {
@@ -66,7 +67,8 @@ curl -X POST http://localhost:3000/v1/stamp \
 ### text (required)
 
 - `main` (string, required): Primary stamp text, max 1000 chars
-- `secondary` (string, optional): Secondary text with variables `{{page}}` and `{{total}}`
+- `secondary` (string, optional): Secondary text line, max 1000 chars
+- `showPageNumbers` (boolean, optional): If true, adds "Page X / Y" automatically after main and secondary text (default: false)
 
 ### pages
 

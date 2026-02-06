@@ -33,6 +33,15 @@ export function validatePayload(payload) {
     return 'text.secondary must be a string';
   }
 
+  if (payload.text.secondary !== undefined && payload.text.secondary.length > 1000) {
+    return 'text.secondary must be 1000 characters or less';
+  }
+
+  // text.showPageNumbers is optional but must be boolean if present
+  if (payload.text.showPageNumbers !== undefined && typeof payload.text.showPageNumbers !== 'boolean') {
+    return 'text.showPageNumbers must be a boolean';
+  }
+
   // pages validation
   if (payload.pages !== undefined) {
     if (payload.pages !== 'all' && !Array.isArray(payload.pages)) {
