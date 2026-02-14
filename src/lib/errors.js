@@ -2,11 +2,12 @@
  * Custom API error class
  */
 export class ApiError extends Error {
-  constructor(statusCode, code, message, requestId) {
+  constructor(statusCode, code, message, requestId, details) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
     this.requestId = requestId;
+    this.details = details;
   }
 }
 
@@ -18,13 +19,17 @@ export function errorHandler(error, request, reply) {
 
   // Handle our custom ApiError
   if (error instanceof ApiError) {
-    return reply.status(error.statusCode).send({
+    const body = {
       error: {
         code: error.code,
         message: error.message,
         requestId: error.requestId,
       },
-    });
+    };
+    if (error.details !== undefined) {
+      body.error.details = error.details;
+    }
+    return reply.status(error.statusCode).send(body);
   }
 
   // Handle Fastify-specific errors

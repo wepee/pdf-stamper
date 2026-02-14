@@ -3,6 +3,7 @@ import multipart from '@fastify/multipart';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { stampRoute } from './routes/stamp.js';
+import { splitRoute } from './routes/split.js';
 import { errorHandler } from './lib/errors.js';
 
 const fastify = Fastify({
@@ -48,8 +49,9 @@ fastify.setErrorHandler(errorHandler);
 // Health check
 fastify.get('/health', async () => ({ status: 'ok' }));
 
-// Register stamp route
+// Register routes
 fastify.register(stampRoute, { prefix: '/v1' });
+fastify.register(splitRoute, { prefix: '/v1' });
 
 // Start server
 const start = async () => {
