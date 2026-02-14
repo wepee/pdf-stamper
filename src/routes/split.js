@@ -15,11 +15,8 @@ function validateSplitItem(s) {
   if (typeof s !== 'object' || s === null) {
     return 'Each split must be an object';
   }
-  if (typeof s.label !== 'string' || s.label.length === 0) {
-    return 'Each split requires a non-empty "label" string';
-  }
-  if (typeof s.piece_no !== 'string' || s.piece_no.length === 0) {
-    return 'Each split requires a non-empty "piece_no" string';
+  if (typeof s.name !== 'string' || s.name.length === 0) {
+    return 'Each split requires a non-empty "name" string';
   }
   if (!Number.isInteger(s.start_page)) {
     return 'Each split requires "start_page" as an integer';
@@ -134,8 +131,7 @@ export async function splitRoute(fastify) {
           success: true,
           total_pages: result.total_pages,
           documents: result.documents.map((doc) => ({
-            piece_no: doc.piece_no,
-            label: doc.label,
+            name: doc.name,
             filename: doc.filename,
             pages: doc.pages,
             page_count: doc.page_count,

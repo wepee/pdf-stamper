@@ -17,10 +17,9 @@ export function isPdf(buffer) {
  * split instructions.
  *
  * Each split instruction must contain:
- * - label    (string)  – human-readable description
- * - piece_no (string)  – piece identifier used in filenames
- * - start_page (int)   – first page (1-indexed, inclusive)
- * - end_page   (int)   – last page  (1-indexed, inclusive)
+ * - name       (string) – document name, used in filenames
+ * - start_page (int)    – first page (1-indexed, inclusive)
+ * - end_page   (int)    – last page  (1-indexed, inclusive)
  *
  * @param {Buffer} pdfBuffer  – the source PDF
  * @param {Array}  splits     – array of split instruction objects
@@ -70,12 +69,11 @@ export async function splitPdf(pdfBuffer, splits, requestId) {
     }
 
     const pdfBytes = await newPdf.save();
-    const slug = slugify(split.label);
-    const filename = `Piece_${split.piece_no}_${slug}.pdf`;
+    const slug = slugify(split.name);
+    const filename = `${slug}.pdf`;
 
     documents.push({
-      piece_no: split.piece_no,
-      label: split.label,
+      name: split.name,
       filename,
       pages: { start: split.start_page, end: split.end_page },
       page_count: pageIndices.length,
